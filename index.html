@@ -5,12 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taxonomy Explained</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
-        .taxonomy-section { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 24px; padding: 24px; }
-        .taxonomy-section h2 { color: #2980b9; margin-top: 0; }
-        .taxonomy-section p { color: #555; }
+    /* Animated outer border for main container */
+    .animated-outer-border {
+        border: 10px solid #2980b9;
+        border-radius: 32px;
+        box-shadow: 0 0 32px #2980b944;
+    animation: borderWiggleOuter 2.4s infinite linear;
+        padding: 24px;
+        background: #f8faff;
+    }
+    @keyframes borderWiggleOuter {
+        0% { box-shadow: 0 0 32px #2980b944; border-width: 10px; border-radius: 32px; }
+        25% { box-shadow: 0 0 48px #2980b988; border-width: 16px; border-radius: 48px; }
+        50% { box-shadow: 0 0 32px #2980b944; border-width: 10px; border-radius: 32px; }
+        75% { box-shadow: 0 0 48px #2980b988; border-width: 16px; border-radius: 48px; }
+        100% { box-shadow: 0 0 32px #2980b944; border-width: 10px; border-radius: 32px; }
+    }
+    /* Pure CSS animated border for image */
+    .animated-border {
+        position: relative;
+        display: inline-block;
+        border: 8px solid #2980b9;
+        border-radius: 24px;
+        box-shadow: 0 0 16px #2980b944;
+    animation: borderWiggle 2.4s infinite linear;
+    }
+    @keyframes borderWiggle {
+        0% { box-shadow: 0 0 16px #2980b944; border-width: 8px; border-radius: 24px; }
+        25% { box-shadow: 0 0 24px #2980b988; border-width: 12px; border-radius: 32px; }
+        50% { box-shadow: 0 0 16px #2980b944; border-width: 8px; border-radius: 24px; }
+        75% { box-shadow: 0 0 24px #2980b988; border-width: 12px; border-radius: 32px; }
+        100% { box-shadow: 0 0 16px #2980b944; border-width: 8px; border-radius: 24px; }
+    }
+    /* Animate connector lines */
+    .wiggle-connector {
+        stroke-dasharray: 400;
+        stroke-dashoffset: 400;
+        animation: drawLine 1.2s cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+    @keyframes drawLine {
+        to {
+            stroke-dashoffset: 0;
+        }
+    }
+        .taxonomy-section.align-top {
+            margin-top: 0 !important;
+        }
+        .taxonomy-layout {
+            align-items: flex-start !important;
+        }
+        .taxonomy-layout { position: relative; }
+        .image-block { position: relative; z-index: 2; }
+        .connector {
+            position: absolute;
+            width: 2px;
+            background: #2980b9;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+    .centered { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .search-bar { display: flex; flex-direction: column; align-items: center; margin-bottom: 32px; }
+    .taxonomy-layout { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 40px; margin-top: 32px; }
+    .taxonomy-column { flex: 1; min-width: 220px; }
+    .image-block { margin-top: 0; }
+    .taxonomy-column { flex: 1; min-width: 220px; }
+    .taxonomy-section {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 24px;
+        padding: 24px;
+        border: 6px solid #2980b9;
+        border-radius: 16px;
+        box-shadow: 0 0 12px #2980b944;
+    animation: borderWiggleTaxonomy 2.4s infinite linear;
+    }
+    /* Remove .animated-border-taxonomy, now handled by .taxonomy-section */
+    @keyframes borderWiggleTaxonomy {
+        0% { box-shadow: 0 0 12px #2980b944; border-width: 6px; border-radius: 16px; }
+        25% { box-shadow: 0 0 18px #2980b988; border-width: 10px; border-radius: 24px; }
+        50% { box-shadow: 0 0 12px #2980b944; border-width: 6px; border-radius: 16px; }
+        75% { box-shadow: 0 0 18px #2980b988; border-width: 10px; border-radius: 24px; }
+        100% { box-shadow: 0 0 12px #2980b944; border-width: 6px; border-radius: 16px; }
+    }
+    .taxonomy-section h2 { color: #2980b9; margin-top: 0; }
+    .taxonomy-section p { color: #555; }
+    .image-block { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 320px; }
     </style>
     <script>
+        // Draw connectors from image to taxonomy sections
+        function drawConnectors() {
+            const svg = document.getElementById('connectors-svg');
+            if (!svg) return;
+            svg.innerHTML = '';
+            const imageBlock = document.getElementById('image-block');
+            const image = document.getElementById('animal-image');
+            // Only draw lines if image is loaded and visible
+            if (!image || image.style.display === 'none' || !image.src || image.src === '' || image.naturalWidth === 0) return;
+            const imageRect = image.getBoundingClientRect();
+            const sections = [
+                'domain-section', 'kingdom-section', 'phylum-section', 'class-section',
+                'order-section', 'family-section', 'genus-section', 'species-section'
+            ];
+                // Left 4 taxonomy cards connect to left side of image, right 4 to right side
+                const leftCorners = [
+                    { x: imageRect.left - svg.getBoundingClientRect().left, y: imageRect.top - svg.getBoundingClientRect().top }, // top-left
+                    { x: imageRect.left - svg.getBoundingClientRect().left, y: imageRect.top + imageRect.height / 3 - svg.getBoundingClientRect().top },
+                    { x: imageRect.left - svg.getBoundingClientRect().left, y: imageRect.top + 2 * imageRect.height / 3 - svg.getBoundingClientRect().top },
+                    { x: imageRect.left - svg.getBoundingClientRect().left, y: imageRect.bottom - svg.getBoundingClientRect().top } // bottom-left
+                ];
+                const rightCorners = [
+                    { x: imageRect.right - svg.getBoundingClientRect().left, y: imageRect.top - svg.getBoundingClientRect().top }, // top-right
+                    { x: imageRect.right - svg.getBoundingClientRect().left, y: imageRect.top + imageRect.height / 3 - svg.getBoundingClientRect().top },
+                    { x: imageRect.right - svg.getBoundingClientRect().left, y: imageRect.top + 2 * imageRect.height / 3 - svg.getBoundingClientRect().top },
+                    { x: imageRect.right - svg.getBoundingClientRect().left, y: imageRect.bottom - svg.getBoundingClientRect().top } // bottom-right
+                ];
+                // Draw straight lines from image corners to taxonomy cards
+                svg.innerHTML = '';
+                // All lines originate from the center of the image
+                const imageCenterX = imageRect.left + imageRect.width / 2 - svg.getBoundingClientRect().left;
+                const imageCenterY = imageRect.top + imageRect.height / 2 - svg.getBoundingClientRect().top;
+                sections.forEach((sectionId) => {
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        const sectionRect = section.getBoundingClientRect();
+                        const endX = sectionRect.left + sectionRect.width / 2 - svg.getBoundingClientRect().left;
+                        const endY = sectionRect.top + sectionRect.height / 2 - svg.getBoundingClientRect().top;
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', imageCenterX);
+                        line.setAttribute('y1', imageCenterY);
+                        line.setAttribute('x2', endX);
+                        line.setAttribute('y2', endY);
+                        line.setAttribute('stroke', '#2980b9');
+                        line.setAttribute('stroke-width', '4');
+                        line.setAttribute('fill', 'none');
+                        svg.appendChild(line);
+                    }
+                });
+        }
+        window.addEventListener('resize', drawConnectors);
         // Fetch taxonomy data for Homo sapiens from GBIF Species API
         async function fetchTaxonomy() {
             try {
@@ -80,52 +215,66 @@
     </script>
 </head>
 <body>
-    <h1>Taxonomy Explained</h1>
-    <div style="margin-bottom: 32px;">
-        <input type="text" id="species-input" placeholder="Enter species name (e.g. Homo sapiens, fox, human)" style="padding:8px; width:260px;">
-        <button onclick="searchSpecies()" style="padding:8px 16px;">Fetch Taxonomy</button>
-        <span id="status-msg" style="margin-left:16px; color:#888;"></span>
-    </div>
-    <div style="margin-bottom: 24px;">
-        <strong>Scientific Name:</strong> <span id="scientific-name"></span>
-    </div>
-    <div style="margin-bottom: 24px;">
-        <img id="animal-image" src="" alt="Animal image" style="max-width:320px;max-height:240px;display:none;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-    </div>
-    <div class="taxonomy-section">
-        <h2>Domain</h2>
-        <p id="domain-desc"></p>
-    </div>
-    <div class="taxonomy-section">
-        <h2>Kingdom</h2>
-        <p id="kingdom-desc"></p>
-    </div>
-    <div class="taxonomy-section">
-        <h2>Phylum</h2>
-        <p id="phylum-desc"></p>
-    </div>
-    <div class="taxonomy-section">
-        <h2>Class</h2>
-        <p id="class-desc"></p>
-    </div>
-    <div class="taxonomy-section">
-        <h2>Order</h2>
-        <p id="order-desc"></p>
-    </div>
-    <div class="taxonomy-section">
-        <h2>Family</h2>
-        <p id="family-desc"></p>
-    </div>
-    <div class="taxonomy-section">
-        <h2>Genus</h2>
-        <p id="genus-desc"></p>
-    </div>
-    <div class="taxonomy-section">
-        <h2>Species</h2>
-        <p id="species-desc"></p>
+    <div class="centered">
+        <h1>Taxonomy Explained</h1>
+        <div class="search-bar">
+            <input type="text" id="species-input" placeholder="Enter species name (e.g. Homo sapiens, fox, human)" style="padding:8px; width:260px;">
+            <button onclick="searchSpecies()" style="padding:8px 16px; margin-top:12px;">Fetch Taxonomy</button>
+            <span id="status-msg" style="margin-top:12px; color:#888;"></span>
+        </div>
+        <div class="taxonomy-layout">
+            <div class="taxonomy-column" style="position:relative;">
+                <div class="taxonomy-section align-top" id="domain-section">
+                    <h2>Domain</h2>
+                    <p id="domain-desc"></p>
+                </div>
+                <div class="taxonomy-section" id="kingdom-section">
+                    <h2>Kingdom</h2>
+                    <p id="kingdom-desc"></p>
+                </div>
+                <div class="taxonomy-section" id="phylum-section">
+                    <h2>Phylum</h2>
+                    <p id="phylum-desc"></p>
+                </div>
+                <div class="taxonomy-section" id="class-section">
+                    <h2>Class</h2>
+                    <p id="class-desc"></p>
+                </div>
+            </div>
+            <div class="image-block" id="image-block" style="align-self: center; margin: 0 32px;">
+                <span class="animated-border">
+                    <img id="animal-image" src="" alt="Taxonomy species image" style="max-width: 260px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.10); margin-bottom: 12px; background: #eee; position: relative; z-index: 3; display: none;" />
+                </span>
+                <div style="margin-top: 16px;">
+                    <strong>Scientific Name:</strong> <span id="scientific-name"></span>
+                </div>
+            </div>
+            <div class="taxonomy-column" style="position:relative;">
+                <div class="taxonomy-section align-top" id="family-section">
+                    <h2>Family</h2>
+                    <p id="family-desc"></p>
+                </div>
+                <div class="taxonomy-section" id="order-section">
+                    <h2>Order</h2>
+                    <p id="order-desc"></p>
+                </div>
+                <div class="taxonomy-section" id="genus-section">
+                    <h2>Genus</h2>
+                    <p id="genus-desc"></p>
+                </div>
+                <div class="taxonomy-section" id="species-section">
+                    <h2>Species</h2>
+                    <p id="species-desc"></p>
+                </div>
+            </div>
+            <!-- SVG connectors (taxonomy cards are above lines) -->
+            <svg id="connectors-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:-1;"></svg>
+        </div>
     </div>
     <script>
         async function fetchTaxonomyById(speciesId) {
+            // Redraw connectors after taxonomy and image update
+            setTimeout(drawConnectors, 300);
             // Helper to fetch image from iNaturalist
             async function fetchImage(scientificName) {
                 const apiUrl = `https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(scientificName)}&rank=species&per_page=1`;
@@ -133,9 +282,12 @@
                     const response = await fetch(apiUrl);
                     const data = await response.json();
                     if (data.results && data.results.length > 0 && data.results[0].default_photo) {
-                        document.getElementById('animal-image').src = data.results[0].default_photo.medium_url;
-                        document.getElementById('animal-image').style.display = 'block';
-                        document.getElementById('animal-image').alt = scientificName + ' image';
+                        const img = document.getElementById('animal-image');
+                        img.onload = () => setTimeout(drawConnectors, 100);
+                        img.onerror = () => { img.style.display = 'none'; };
+                        img.src = data.results[0].default_photo.medium_url;
+                        img.style.display = 'block';
+                        img.alt = scientificName + ' image';
                         return;
                     }
                     document.getElementById('animal-image').style.display = 'none';
@@ -211,6 +363,7 @@
         window.onload = function() {
             document.getElementById('scientific-name').textContent = 'Homo sapiens';
             fetchTaxonomyById(2436436); // Homo sapiens by default
+            setTimeout(drawConnectors, 300);
         };
     </script>
 </body>
