@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taxonomy Explained</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+        .taxonomy-section { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 24px; padding: 24px; }
+        .taxonomy-section h2 { color: #2980b9; margin-top: 0; }
+        .taxonomy-section p { color: #555; }
+    </style>
+    <script>
+        // Fetch taxonomy data for Homo sapiens from GBIF Species API
+        async function fetchTaxonomy() {
+            try {
+                const response = await fetch('https://api.gbif.org/v1/species/2436436');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                console.log('GBIF API response:', data); // Log the full response for debugging
+                // GBIF does not provide domain, so set as 'Eukaryota' for Homo sapiens
+                document.getElementById('domain-desc').textContent = 'Eukaryota';
+                document.getElementById('kingdom-desc').textContent = data.kingdom || 'N/A';
+                document.getElementById('phylum-desc').textContent = data.phylum || 'N/A';
+                document.getElementById('class-desc').textContent = data.class || 'N/A';
+                document.getElementById('order-desc').textContent = data.order || 'N/A';
+                document.getElementById('family-desc').textContent = data.family || 'N/A';
+                document.getElementById('genus-desc').textContent = data.genus || 'N/A';
+                document.getElementById('species-desc').textContent = data.species || data.canonicalName || 'N/A';
+            } catch (error) {
+                console.log('Fetch error:', error);
+                document.getElementById('domain-desc').textContent = 'Error loading data';
+                document.getElementById('kingdom-desc').textContent = '';
+                document.getElementById('phylum-desc').textContent = '';
+            // Search for species by name using GBIF API, then fetch taxonomy
+            async function searchSpecies() {
+                const name = document.getElementById('species-input').value.trim();
+                if (!name) {
+                    document.getElementById('status-msg').textContent = 'Please enter a species name.';
+                    return;
+                }
+                document.getElementById('status-msg').textContent = 'Searching...';
+                try {
+                    const searchUrl = `https://api.gbif.org/v1/species/search?q=${encodeURIComponent(name)}&rank=species&limit=1`;
+                    const response = await fetch(searchUrl);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const data = await response.json();
+                    if (data.results && data.results.length > 0) {
+                        const speciesId = data.results[0].key;
+                        fetchTaxonomyById(speciesId);
+                    } else {
+                        document.getElementById('status-msg').textContent = 'Species not found.';
+                        document.getElementById('domain-desc').textContent = '';
+                        document.getElementById('kingdom-desc').textContent = '';
+                        document.getElementById('phylum-desc').textContent = '';
+                        document.getElementById('class-desc').textContent = '';
+                        document.getElementById('order-desc').textContent = '';
+                        document.getElementById('family-desc').textContent = '';
+                        document.getElementById('genus-desc').textContent = '';
+                        document.getElementById('species-desc').textContent = '';
+                    }
+                } catch (error) {
+                    console.log('Search error:', error);
+                    document.getElementById('status-msg').textContent = 'Error searching for species.';
+                }
+            }
+
+            // On page load, show Homo sapiens taxonomy
+            window.onload = function() {
+                fetchTaxonomyById(2436436);
+            };
+                document.getElementById('class-desc').textContent = '';
+                document.getElementById('order-desc').textContent = '';
+                document.getElementById('family-desc').textContent = '';
+                document.getElementById('genus-desc').textContent = '';
+                document.getElementById('species-desc').textContent = '';
+            }
+        }
+        window.onload = fetchTaxonomy;
+    </script>
+</head>
+<body>
+    <h1>Taxonomy Explained</h1>
+    <div style="margin-bottom: 32px;">
+        <input type="text" id="species-input" placeholder="Enter species name (e.g. Homo sapiens, fox, human)" style="padding:8px; width:260px;">
+        <button onclick="searchSpecies()" style="padding:8px 16px;">Fetch Taxonomy</button>
+        <span id="status-msg" style="margin-left:16px; color:#888;"></span>
+    </div>
+    <div style="margin-bottom: 24px;">
+        <strong>Scientific Name:</strong> <span id="scientific-name"></span>
+    </div>
+    <div style="margin-bottom: 24px;">
+        <img id="animal-image" src="" alt="Animal image" style="max-width:320px;max-height:240px;display:none;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    </div>
+    <div class="taxonomy-section">
+        <h2>Domain</h2>
+        <p id="domain-desc"></p>
+    </div>
+    <div class="taxonomy-section">
+        <h2>Kingdom</h2>
+        <p id="kingdom-desc"></p>
+    </div>
+    <div class="taxonomy-section">
+        <h2>Phylum</h2>
+        <p id="phylum-desc"></p>
+    </div>
+    <div class="taxonomy-section">
+        <h2>Class</h2>
+        <p id="class-desc"></p>
+    </div>
+    <div class="taxonomy-section">
+        <h2>Order</h2>
+        <p id="order-desc"></p>
+    </div>
+    <div class="taxonomy-section">
+        <h2>Family</h2>
+        <p id="family-desc"></p>
+    </div>
+    <div class="taxonomy-section">
+        <h2>Genus</h2>
+        <p id="genus-desc"></p>
+    </div>
+    <div class="taxonomy-section">
+        <h2>Species</h2>
+        <p id="species-desc"></p>
+    </div>
+    <script>
+        async function fetchTaxonomyById(speciesId) {
+            // Helper to fetch image from iNaturalist
+            async function fetchImage(scientificName) {
+                const apiUrl = `https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(scientificName)}&rank=species&per_page=1`;
+                try {
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+                    if (data.results && data.results.length > 0 && data.results[0].default_photo) {
+                        document.getElementById('animal-image').src = data.results[0].default_photo.medium_url;
+                        document.getElementById('animal-image').style.display = 'block';
+                        document.getElementById('animal-image').alt = scientificName + ' image';
+                        return;
+                    }
+                    document.getElementById('animal-image').style.display = 'none';
+                } catch (error) {
+                    document.getElementById('animal-image').style.display = 'none';
+                }
+            }
+            try {
+                document.getElementById('status-msg').textContent = 'Loading...';
+                const response = await fetch(`https://api.gbif.org/v1/species/${speciesId}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                const sciName = data.canonicalName || data.scientificName || 'N/A';
+                document.getElementById('scientific-name').textContent = sciName;
+                fetchImage(sciName);
+                document.getElementById('domain-desc').textContent = 'Eukaryota';
+                document.getElementById('kingdom-desc').textContent = data.kingdom || 'N/A';
+                document.getElementById('phylum-desc').textContent = data.phylum || 'N/A';
+                document.getElementById('class-desc').textContent = data.class || 'N/A';
+                document.getElementById('order-desc').textContent = data.order || 'N/A';
+                document.getElementById('family-desc').textContent = data.family || 'N/A';
+                document.getElementById('genus-desc').textContent = data.genus || 'N/A';
+                document.getElementById('species-desc').textContent = data.species || data.canonicalName || 'N/A';
+                document.getElementById('status-msg').textContent = '';
+            } catch (error) {
+                document.getElementById('scientific-name').textContent = '';
+                document.getElementById('animal-image').style.display = 'none';
+                document.getElementById('domain-desc').textContent = 'Error loading data';
+                document.getElementById('kingdom-desc').textContent = '';
+                document.getElementById('phylum-desc').textContent = '';
+                document.getElementById('class-desc').textContent = '';
+                document.getElementById('order-desc').textContent = '';
+                document.getElementById('family-desc').textContent = '';
+                document.getElementById('genus-desc').textContent = '';
+                document.getElementById('species-desc').textContent = '';
+                document.getElementById('status-msg').textContent = 'Error loading data';
+            }
+        }
+        async function searchSpecies() {
+            const name = document.getElementById('species-input').value.trim();
+            if (!name) {
+                document.getElementById('status-msg').textContent = 'Please enter a species name.';
+                return;
+            }
+            document.getElementById('status-msg').textContent = 'Searching...';
+            try {
+                const searchUrl = `https://api.gbif.org/v1/species/search?q=${encodeURIComponent(name)}&rank=species&limit=1`;
+                const response = await fetch(searchUrl);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                if (data.results && data.results.length > 0) {
+                    const speciesId = data.results[0].key;
+                    const sciName = data.results[0].canonicalName || data.results[0].scientificName || 'N/A';
+                    document.getElementById('scientific-name').textContent = sciName;
+                    document.getElementById('animal-image').style.display = 'none';
+                    fetchTaxonomyById(speciesId);
+                } else {
+                    document.getElementById('status-msg').textContent = 'Species not found.';
+                    document.getElementById('scientific-name').textContent = '';
+                    document.getElementById('domain-desc').textContent = '';
+                    document.getElementById('kingdom-desc').textContent = '';
+                    document.getElementById('phylum-desc').textContent = '';
+                    document.getElementById('class-desc').textContent = '';
+                    document.getElementById('order-desc').textContent = '';
+                    document.getElementById('family-desc').textContent = '';
+                    document.getElementById('genus-desc').textContent = '';
+                    document.getElementById('species-desc').textContent = '';
+                }
+            } catch (error) {
+                document.getElementById('status-msg').textContent = 'Error searching for species.';
+            }
+        }
+        window.onload = function() {
+            document.getElementById('scientific-name').textContent = 'Homo sapiens';
+            fetchTaxonomyById(2436436); // Homo sapiens by default
+        };
+    </script>
+</body>
+</html>
